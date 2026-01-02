@@ -16,6 +16,20 @@ type ErrorResponse struct {
 	Message string `json:"message,omitempty"`
 }
 
+// ValidationErrorDetail represents a field-level validation error
+type ValidationErrorDetail struct {
+	Field   string `json:"field"`
+	Message string `json:"message"`
+}
+
+// ValidationErrorResponse represents an error response with validation details
+type ValidationErrorResponse struct {
+	Success bool                    `json:"success"`
+	Error   string                  `json:"error"`
+	Message string                  `json:"message,omitempty"`
+	Details []ValidationErrorDetail `json:"details,omitempty"`
+}
+
 // PaginatedResponse represents a paginated response
 type PaginatedResponse struct {
 	Success bool        `json:"success"`
@@ -46,6 +60,16 @@ func Error(c *gin.Context, statusCode int, err error, message string) {
 		Success: false,
 		Error:   err.Error(),
 		Message: message,
+	})
+}
+
+// ValidationError sends a validation error response with field details
+func ValidationError(c *gin.Context, statusCode int, errorMsg string, message string, details []ValidationErrorDetail) {
+	c.JSON(statusCode, ValidationErrorResponse{
+		Success: false,
+		Error:   errorMsg,
+		Message: message,
+		Details: details,
 	})
 }
 

@@ -4,13 +4,26 @@ A REST API for product management built with Go, Gin, and MongoDB following Clea
 
 ## 🚀 Features
 
+### Products Module
 - ✅ CRUD operations for products
+- ✅ Product search and filtering
+- ✅ Pagination support
+
+### Orders Module (NEW)
+- ✅ Create orders (DELIVERY & ON_SITE)
+- ✅ Public order tracking
+- ✅ Partial updates (PATCH - operational changes)
+- ✅ Full modifications (PUT - product changes)
+- ✅ Advanced filters and analytics
+- ✅ Status lifecycle management
+- ✅ MongoDB aggregation for metrics
+
+### Architecture & Infrastructure
 - ✅ RESTful API design
-- ✅ MongoDB integration
+- ✅ MongoDB integration with performance indexes
 - ✅ Clean Architecture / Hexagonal Architecture
 - ✅ Structured logging with slog
 - ✅ Request validation
-- ✅ Pagination support
 - ✅ CORS enabled
 - ✅ Graceful shutdown
 - ✅ Environment-based configuration
@@ -67,6 +80,17 @@ The API will start on `http://localhost:8080` by default.
 - `PUT /api/v1/products/:id` - Update a product
 - `DELETE /api/v1/products/:id` - Delete a product
 
+### Orders (NEW)
+- `POST /api/v1/orders` - Create a new order
+- `GET /api/v1/orders/track/:code` - Track order publicly (no auth)
+- `PATCH /api/v1/orders` - Partial update (status, notes, payment)
+- `PUT /api/v1/orders` - Modify order (including products)
+- `GET /api/v1/orders` - List orders with filters
+- `GET /api/v1/orders/metrics` - Get analytics and metrics
+- `GET /api/v1/orders/:code` - Get order by code (admin)
+
+📖 **For detailed Orders Module documentation, see [ORDERS_MODULE_GUIDE.md](ORDERS_MODULE_GUIDE.md)**
+
 ### Example Request (Create Product):
 ```bash
 curl -X POST http://localhost:8080/api/v1/products \
@@ -80,9 +104,16 @@ curl -X POST http://localhost:8080/api/v1/products \
   }'
 ```
 
-### Example Request (Get Products with Pagination):
+### Example Request (Create Order):
 ```bash
-curl "http://localhost:8080/api/v1/products?limit=10&offset=0"
+curl -X POST http://localhost:8080/api/v1/orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sale_type": "DELIVERY",
+    "products": [{"id": "product-uuid", "name": "Laptop", "price": 99999, "quantity": 1}],
+    "customer": {"name": "John Doe", "phone": "+573001234567", "identification": "123456", "id_type": "CC"},
+    "shipping_address": "123 Main St"
+  }'
 ```
 
 ## 📁 Project Structure
@@ -99,14 +130,21 @@ curl "http://localhost:8080/api/v1/products?limit=10&offset=0"
 │   ├── config/
 │   │   └── config.go              # Configuration management
 │   ├── domain/
-│   │   └── product/               # Domain layer
-│   │       ├── entity.go          # Product entity
+│   │   ├── product/               # Product domain
+│   │   │   ├── entity.go
+│   │   │   ├── repository.go
+│   │   │   └── service.go
+│   │   └── order/                 # Order domain (NEW)
+│   │       ├── entity.go          # Order, OrderProduct, Customer
+│   │       ├── errors.go          # 35 domain-specific errors
 │   │       ├── repository.go      # Repository interface
 │   │       └── service.go         # Business logic
 │   ├── handler/
-│   │   └── product_handler.go     # HTTP handlers
+│   │   ├── product_handler.go     # Product HTTP handlers
+│   │   └── order_handler.go       # Order HTTP handlers (NEW)
 │   ├── repository/
-│   │   └── product_mongo_repository.go  # MongoDB implementation
+│   │   ├── product_mongo_repository.go
+│   │   └── order_mongo_repository.go  # MongoDB with indexes (NEW)
 │   ├── infra/
 │   │   ├── mongo/
 │   │   │   └── client.go          # MongoDB client
@@ -115,7 +153,8 @@ curl "http://localhost:8080/api/v1/products?limit=10&offset=0"
 │   │   └── http/
 │   │       └── middleware.go      # HTTP middlewares
 │   ├── dto/
-│   │   └── product_dto.go         # Data transfer objects
+│   │   ├── product_dto.go
+│   │   └── order_dto.go           # Request/response DTOs (NEW)
 │   ├── response/
 │   │   └── api_response.go        # API response formats
 │   └── errors/
@@ -124,7 +163,8 @@ curl "http://localhost:8080/api/v1/products?limit=10&offset=0"
 ├── .gitignore
 ├── Makefile
 ├── go.mod
-└── README.md
+├── README.md
+└── ORDERS_MODULE_GUIDE.md          # Comprehensive orders documentation (NEW)
 ```
 
 ## ��️ Architecture

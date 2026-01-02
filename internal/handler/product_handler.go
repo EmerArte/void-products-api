@@ -27,6 +27,20 @@ func (h *ProductHandler) Create(c *gin.Context) {
 	var req dto.CreateProductRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Warn("invalid request body", "error", err)
+		// Format validation errors for user-friendly response
+		errorMsg, details := FormatValidationErrors(err)
+		if details != nil {
+			// Convert to response format
+			responseDetails := make([]response.ValidationErrorDetail, len(details))
+			for i, d := range details {
+				responseDetails[i] = response.ValidationErrorDetail{
+					Field:   d.Field,
+					Message: d.Message,
+				}
+			}
+			response.ValidationError(c, http.StatusBadRequest, errorMsg, "Validation failed", responseDetails)
+			return
+		}
 		response.Error(c, http.StatusBadRequest, err, "Invalid request body")
 		return
 	}
@@ -108,6 +122,20 @@ func (h *ProductHandler) Update(c *gin.Context) {
 	var req dto.UpdateProductRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.Warn("invalid request body", "error", err)
+		// Format validation errors for user-friendly response
+		errorMsg, details := FormatValidationErrors(err)
+		if details != nil {
+			// Convert to response format
+			responseDetails := make([]response.ValidationErrorDetail, len(details))
+			for i, d := range details {
+				responseDetails[i] = response.ValidationErrorDetail{
+					Field:   d.Field,
+					Message: d.Message,
+				}
+			}
+			response.ValidationError(c, http.StatusBadRequest, errorMsg, "Validation failed", responseDetails)
+			return
+		}
 		response.Error(c, http.StatusBadRequest, err, "Invalid request body")
 		return
 	}

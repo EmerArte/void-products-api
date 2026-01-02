@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(productHandler *handler.ProductHandler, cfg *config.Config) *gin.Engine {
+func SetupRouter(productHandler *handler.ProductHandler, orderHandler *handler.OrderHandler, cfg *config.Config) *gin.Engine {
 	router := gin.New()
 	router.Use(customhttp.Recovery())
 	router.Use(customhttp.Logger())
@@ -37,6 +37,31 @@ func SetupRouter(productHandler *handler.ProductHandler, cfg *config.Config) *gi
 		{
 			categories.GET("/company/:company_id", productHandler.GetCategoriesByCompanyID)
 			categories.GET("/sale-point/:sale_point_id", productHandler.GetCategoriesBySalePointID)
+		}
+
+		// Order endpoints
+		orders := v1.Group("/orders")
+		{
+			// STAGE 1: Create order
+			orders.POST("", orderHandler.Create)
+
+			// STAGE 2: Public tracking (no auth required)
+			orders.GET("/track/:code", orderHandler.Track)
+
+			// STAGE 3: Partial update (PATCH - no products)
+			orders.PATCH("", orderHandler.PartialUpdate)
+
+			// STAGE 4: Modify order (PUT - products allowed)
+			orders.PUT("", orderHandler.Modify)
+
+			// STAGE 5: List orders with filters
+			orders.GET("", orderHandler.GetAll)
+
+			// STAGE 5: Get metrics and analytics
+			orders.GET("/metrics", orderHandler.GetMetrics)
+
+			// Get order by code (admin/internal)
+			orders.GET("/:code", orderHandler.GetByCode)
 		}
 	}
 

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/emerarteaga/products-api/internal/config"
+	"github.com/emerarteaga/products-api/internal/domain/order"
 	"github.com/emerarteaga/products-api/internal/domain/product"
 	"github.com/emerarteaga/products-api/internal/handler"
 	"github.com/emerarteaga/products-api/internal/infra/logger"
@@ -41,21 +42,36 @@ func (s *Server) Start() error {
 	productsCollection := mongoClient.Database.Collection("products")
 	productRepo := repository.NewProductMongoRepository(productsCollection)
 
-	// Create indexes for better query performance
-	// Note: CreateIndexes is called on the concrete type before using as interface
+	// Create indexes for products
 	if mongoRepo, ok := productRepo.(interface{ CreateIndexes(context.Context) error }); ok {
 		if err := mongoRepo.CreateIndexes(ctx); err != nil {
-			logger.Warn("failed to create indexes", "error", err)
+			logger.Warn("failed to create product indexes", "error", err)
 		} else {
-			logger.Info("database indexes created successfully")
+			logger.Info("product indexes created successfully")
 		}
 	}
 
 	productService := product.NewService(productRepo)
 	productHandler := handler.NewProductHandler(productService)
 
+	// Initialize order module
+	ordersCollection := mongoClient.Database.Collection("orders")
+	orderRepo := repository.NewOrderMongoRepository(ordersCollection)
+
+	// Create indexes for orders
+	if mongoRepo, ok := orderRepo.(interface{ CreateIndexes(context.Context) error }); ok {
+		if err := mongoRepo.CreateIndexes(ctx); err != nil {
+			logger.Warn("failed to create order indexes", "error", err)
+		} else {
+			logger.Info("order indexes created successfully")
+		}
+	}
+
+	orderService := order.NewService(orderRepo)
+	orderHandler := handler.NewOrderHandler(orderService)
+
 	gin.SetMode(s.config.Server.Mode)
-	router := SetupRouter(productHandler, s.config)
+	router := SetupRouter(productHandler, orderHandler, s.config)
 
 	s.httpServer = &http.Server{
 		Addr:    fmt.Sprintf(":%d", s.config.Server.Port),
