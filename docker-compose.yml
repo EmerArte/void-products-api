@@ -16,7 +16,7 @@ services:
       - DATABASE_URI=mongodb://mongodb:27017
       - DATABASE_NAME=products_db
       # CORS Configuration for Astro Frontend
-      - CORS_ALLOWED_ORIGINS=http://localhost:4321,http://localhost:3000,http://127.0.0.1:4321
+      - CORS_ALLOWED_ORIGINS=http://localhost:4322,http://localhost:3000,http://127.0.0.1:4322
       - CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,OPTIONS
       - CORS_ALLOWED_HEADERS=Content-Type,Authorization,X-Requested-With
     restart: on-failure
